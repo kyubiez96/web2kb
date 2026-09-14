@@ -19,7 +19,7 @@ jobs:
           node-version: 22
 
       - name: Install deps
-        run: npm ci --omit=dev=false
+        run: npm install
 
       - name: Create R2 bucket (best-effort)
         env:
