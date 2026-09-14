@@ -64,12 +64,13 @@ jobs:
 
 
       - name: Push FIRECRAWL_API_KEY as Worker secret (idempotent)
-        if: env.FIRECRAWL_API_KEY != ''
+        if: ${{ secrets.FIRECRAWL_API_KEY != '' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
         run: |
-          echo "$FIRECRAWL_API_KEY" | npx wrangler secret put FIRECRAWL_API_KEY || true
+          echo "$FIRECRAWL_API_KEY" | npx wrangler secret put FIRECRAWL_API_KEY
       - name: Smoke test /health
         run: |
           URL="${{ steps.url.outputs.url }}"
