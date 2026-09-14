@@ -1,71 +1,72 @@
 # Web2KB
 
-Web-to-Knowledge Base. Tempel URL, dapat artikel bersih (markdown), baca di HP.
+> Paste a URL → clean markdown + AI summary, saved offline.  
+> *Tempel URL, dapat artikel bersih, baca di HP.*
+
+[![Build APK](https://github.com/kyubiez96/web2kb/actions/workflows/build-android.yml/badge.svg)](https://github.com/kyubiez96/web2kb/actions/workflows/build-android.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Cloudflare Workers](https://img.shields.io/badge/Powered%20by-Cloudflare%20Workers-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com)
+
+Web2KB turns any article URL into a clean, AI-summarized knowledge entry you can read offline on your phone. No accounts, no trackers — you deploy your own Worker, you keep your own API key.
 
 ```
 [Android APK (WebView, no secrets)]
         ↓ user-set Worker URL
-[Cloudflare Worker]
+[Cloudflare Worker (Hono)]
    ├─ Firecrawl (scrape → markdown)
    ├─ Workers AI (summary, free tier)
-   └─ R2 (penyimpanan artikel)
+   └─ R2 (article storage)
 ```
+
+## Features
+
+- 📥 Paste URL → clean markdown + summary in ~10 seconds
+- 📚 Offline library, no network needed after saving
+- 🔐 Zero secrets in the APK — BYO (bring your own) Worker
+- 🤖 Free-tier Workers AI summaries (bart-large-cnn)
+- 📱 Tailwind UI, WebView APK, no AndroidX
+- ⚙️ 1-click deploy: 5 minutes from clone to live Worker
 
 ## Quick start
 
-### 1. Deploy Worker (1 menit)
+### 1. Deploy your Worker (1 minute)
+
+Requires [wrangler](https://developers.cloudflare.com/workers/wrangler/) and a free Cloudflare account.
 
 ```bash
 cd worker
 npm install
 wrangler r2 bucket create web2kb-bucket
-wrangler secret put FIRECRAWL_API_KEY   # paste: fc-xxx
+wrangler secret put FIRECRAWL_API_KEY   # get one at firecrawl.dev (500 free credits)
 wrangler deploy
 ```
 
-Note URL Worker kamu: `https://web2kb.<your-subdomain>.workers.dev`
+Note your Worker URL: `https://web2kb.<your-subdomain>.workers.dev`
 
-### 2. Pasang APK
+### 2. Install the APK
 
-Download dari [Releases](../../releases) → `web2kb-v0.1.0.apk`.
+Download `web2kb-v0.1.0.apk` from [Releases](https://github.com/kyubiez96/web2kb/releases).
 
-Buka app → Settings → paste Worker URL → Test → Simpan.
+Open the app → **Settings** → paste your Worker URL → **Test** → **Save**.
 
-### 3. Pakai
+### 3. Use it
 
-Tambah URL → tunggu ~10 detik → baca di Library.
+**Add** a URL → wait ~10 s → read it in your **Library**, offline.
 
-## Untuk developer / kontributor
+## Build from source
 
-Build APK dengan Worker URL custom:
+```bash
+# Worker
+cd worker && npm install && npx wrangler dev
 
-1. Fork repo ini
-2. Add secret `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` di Settings → Secrets
-3. Actions → "Build APK" → Run workflow → masukkan Worker URL kamu → download artifact
+# APK (CI only — the repo's Build APK workflow tags android-v*)
+gh workflow run build-android.yml -f worker_url=https://web2kb.<sub>.workers.dev
+```
 
-## Arsitektur
+## Stack
 
-- `worker/` — Cloudflare Worker (Hono + R2 + Workers AI + Firecrawl)
-- `apk/` — Android WebView shell (Kotlin, no AndroidX)
-- `.github/workflows/` — CI/CD
+Cloudflare Workers · Hono · R2 · Workers AI · Firecrawl · Android (Kotlin, no AndroidX) · Tailwind CSS · GitHub Actions
 
-## Quota gratis
+## License
 
-| Layanan | Batas | Cukup untuk |
-|---|---|---|
-| Cloudflare Workers | 100k req/day | ✔ |
-| R2 | 10 GB, 1M reads/mo | ✔ |
-| Workers AI (bart-large-cnn) | ~10k neurons/day | ✔ hemat |
-| Firecrawl | 500 credits/mo | ~500 scrape |
-
-Workers AI merangkum otomatis saat save. Cache 24 jam per artikel. Kalau gagal, artikel tetap tersimpan tanpa summary.
-
-## Privacy
-
-- API key Firecrawl hanya di Worker secrets (server-side).
-- Setiap user deploy Worker sendiri + isi key sendiri. APK publik tidak punya key.
-- Artikel tersimpan di R2 bucket milik deployer Worker.
-
-## Lisensi
-
-MIT.
+[MIT](LICENSE) © 2026 Kyubiez96
