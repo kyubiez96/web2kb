@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Library — web2kb</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 min-h-screen pb-24">
+  <nav class="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center gap-3 z-10">
+    <a href="library.html" class="font-semibold text-lg dark:text-white">📚 web2kb</a>
+    <div class="flex-1"></div>
+    <a href="add.html" class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md">+ Tambah</a>
+    <a href="settings.html" class="text-sm text-slate-600 dark:text-slate-300 px-2">⚙</a>
+  </nav>
+
+  <main class="max-w-md mx-auto p-4">
+    <div id="empty" class="hidden text-center py-16 text-slate-400 dark:text-slate-500">
+      <div class="text-5xl mb-3">📭</div>
+      <p>Library masih kosong.</p>
+      <a href="add.html" class="inline-block mt-4 text-blue-600 dark:text-blue-400 underline">Tambah URL pertama</a>
+    </div>
+
+    <div id="loading" class="text-center py-12 text-slate-400">Memuat...</div>
+    <ul id="list" class="space-y-3"></ul>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    async function load() {
+      const loading = document.getElementById("loading");
+      const empty = document.getElementById("empty");
+      const list = document.getElementById("list");
+      loading.classList.remove("hidden");
+      try {
+        const r = await api("/library");
+        const items = r.items || [];
+        loading.classList.add("hidden");
+        if (!items.length) { empty.classList.remove("hidden"); return; }
+        list.innerHTML = items.map(a => `
+          <li>
+            <a href="article.html?id=${encodeURIComponent(a.id)}"
+               class="block bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700 active:scale-[0.98] transition-transform">
+              <h3 class="font-semibold text-slate-900 dark:text-white mb-1 line-clamp-2">${escapeHtml(a.title || a.id)}</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 mb-2">${escapeHtml(a.summary || "(tanpa ringkasan)")}</p>
+              <div class="text-xs text-slate-400 dark:text-slate-500 truncate">${escapeHtml(a.source_url || "")}</div>
+              <div class="text-xs text-slate-400 dark:text-slate-500 mt-1">${formatDate(a.saved_at)}</div>
+            </a>
+          </li>
+        `).join("");
+      } catch (e) {
+        loading.classList.add("hidden");
+        list.innerHTML = `
+          <li class="bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 rounded-lg p-4">
+            <div class="font-semibold mb-1">Gagal memuat</div>
+            <div class="text-sm">${escapeHtml(e.message)}</div>
+            <a href="settings.html" class="text-sm underline mt-2 inline-block">Buka Settings</a>
+          </li>`;
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

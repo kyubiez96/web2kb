@@ -1,0 +1,69 @@
+name: Build APK
+
+on:
+  push:
+    tags: ['android-v*']
+  workflow_dispatch:
+    inputs:
+      worker_url:
+        description: 'Worker URL to bake into config.js'
+        required: true
+        type: string
+        default: 'https://web2kb.example.workers.dev'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inject Worker URL into config.js
+        run: |
+          URL='${{ github.event.inputs.worker_url }}'
+          echo "Worker URL: $URL"
+          sed -i "s|window.WEB2KB_WORKER_URL = .*|window.WEB2KB_WORKER_URL = \"$URL\";|" \
+            apk/app/src/main/assets/web/config.js
+          cat apk/app/src/main/assets/web/config.js
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Create local.properties with SDK path
+        working-directory: apk
+        run: |
+          SDK_PATH="/usr/local/lib/android/sdk"
+          [ -d "$SDK_PATH" ] || SDK_PATH="/opt/android-sdk"
+          [ -d "$SDK_PATH" ] || SDK_PATH="$ANDROID_HOME"
+          echo "sdk.dir=$SDK_PATH" > local.properties
+          cat local.properties
+
+      - name: Build APK
+        working-directory: apk
+        run: gradle --no-daemon assembleRelease
+
+      - name: Locate APK
+        id: locate
+        working-directory: apk
+        run: |
+          find app/build/outputs/apk -name "*.apk" | head -1 > apk_path
+          echo "path=$(cat apk_path)" >> $GITHUB_OUTPUT
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web2kb-apk
+          path: ${{ steps.locate.outputs.path }}
+
+      - name: Publish to release (tag only)
+        if: startsWith(github.ref, 'refs/tags/android-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.locate.outputs.path }}

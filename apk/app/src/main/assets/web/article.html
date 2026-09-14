@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Artikel — web2kb</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 min-h-screen">
+  <nav class="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center gap-3 z-10">
+    <a href="library.html" class="text-slate-600 dark:text-slate-300">←</a>
+    <div class="font-semibold text-base dark:text-white ml-2 line-clamp-1" id="navtitle">Artikel</div>
+    <div class="flex-1"></div>
+    <a id="open" href="#" target="_blank" class="text-sm text-slate-600 dark:text-slate-300 px-2 hidden">↗</a>
+  </nav>
+
+  <main class="max-w-2xl mx-auto p-4">
+    <div id="loading" class="text-center py-12 text-slate-400">Memuat...</div>
+    <article id="article" class="hidden bg-white dark:bg-slate-800 rounded-lg p-5 shadow-sm border border-slate-200 dark:border-slate-700">
+      <h1 id="title" class="text-2xl font-bold mb-2 dark:text-white"></h1>
+      <div class="text-xs text-slate-400 mb-4">
+        <a id="src" href="#" target="_blank" class="underline"></a> · <span id="saved"></span>
+      </div>
+      <div id="summary" class="hidden mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-sm text-blue-900 dark:text-blue-100 italic"></div>
+      <div id="content" class="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-100 leading-relaxed"></div>
+    </article>
+    <div id="error" class="hidden text-center py-12 text-red-600 dark:text-red-400"></div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    async function load() {
+      const id = new URLSearchParams(location.search).get("id");
+      if (!id) { showError("ID artikel kosong"); return; }
+      try {
+        const a = await api("/article/" + encodeURIComponent(id));
+        document.getElementById("loading").classList.add("hidden");
+        const art = document.getElementById("article");
+        art.classList.remove("hidden");
+        document.getElementById("title").textContent = a.title || id;
+        document.getElementById("navtitle").textContent = a.title || "Artikel";
+        document.getElementById("src").textContent = a.source_url || a.url || "";
+        document.getElementById("src").href = a.source_url || a.url || "#";
+        document.getElementById("saved").textContent = formatDate(a.saved_at);
+        if (a.source_url) {
+          const o = document.getElementById("open");
+          o.href = a.source_url; o.classList.remove("hidden");
+        }
+        if (a.summary) {
+          const s = document.getElementById("summary");
+          s.textContent = a.summary;
+          s.classList.remove("hidden");
+        }
+        document.getElementById("content").innerHTML = renderMarkdown(a.markdown || "");
+      } catch (e) {
+        showError(e.message);
+      }
+    }
+    function showError(msg) {
+      document.getElementById("loading").classList.add("hidden");
+      const el = document.getElementById("error");
+      el.textContent = "Gagal memuat: " + msg;
+      el.classList.remove("hidden");
+    }
+    load();
+  </script>
+</body>
+</html>

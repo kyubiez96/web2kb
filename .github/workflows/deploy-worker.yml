@@ -1,0 +1,72 @@
+name: Deploy Worker
+
+on:
+  push:
+    branches: [main]
+    paths: ['worker/**']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install deps
+        run: npm ci --omit=dev=false
+
+      - name: Create R2 bucket (best-effort)
+        env:
+          CF_API: https://api.cloudflare.com/client/v4
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CF_ACCOUNT_ID" ] || [ -z "$CF_TOKEN" ]; then
+            echo "::warning::CF secrets missing, skipping R2 bucket create"
+            exit 0
+          fi
+          curl -sf -X POST \
+            -H "Authorization: Bearer $CF_TOKEN" \
+            "$CF_API/accounts/$CF_ACCOUNT_ID/r2/buckets" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"web2kb-bucket"}' \
+            -o /dev/null || echo "bucket may already exist"
+
+      - name: Deploy worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+
+      - name: Get deployed worker URL
+        id: url
+        env:
+          CF_API: https://api.cloudflare.com/client/v4
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          RESP=$(curl -sf -H "Authorization: Bearer $CF_TOKEN" \
+            "$CF_API/accounts/$CF_ACCOUNT_ID/workers/scripts/web2kb")
+          URL=$(echo "$RESP" | jq -r '.result.routes[0] // .result.url // empty')
+          if [ -z "$URL" ]; then
+            SUBDOMAIN=$(curl -sf -H "Authorization: Bearer $CF_TOKEN" \
+              "$CF_API/accounts/$CF_ACCOUNT_ID" | jq -r '.result.workers_subdomain // empty')
+            URL="https://web2kb.${SUBDOMAIN}.workers.dev"
+          fi
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployed: $URL"
+
+      - name: Smoke test /health
+        run: |
+          URL="${{ steps.url.outputs.url }}"
+          for i in $(seq 1 12); do
+            body=$(curl -sf -m 10 "$URL/health") && echo "$body" && exit 0
+            sleep 5
+          done
+          echo "::error::worker not reachable"; exit 1

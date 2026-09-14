@@ -1,0 +1,16 @@
+name = "web2kb"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true
+
+[[r2_buckets]]
+binding = "WEB2KB_BUCKET"
+bucket_name = "web2kb-bucket"
+
+[ai]
+binding = "AI"
+
+[observability]
+enabled = true

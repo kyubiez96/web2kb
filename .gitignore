@@ -1,0 +1,18 @@
+# Node
+worker/node_modules/
+worker/wrangler.toml.bak
+
+# Android
+apk/.gradle/
+apk/build/
+apk/app/build/
+apk/local.properties
+*.iml
+
+# Secrets / personal
+*.apk
+*.aab
+.env
+.env.*
+local-config.js
+worker/.dev.vars
