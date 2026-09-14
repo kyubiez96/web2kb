@@ -62,15 +62,18 @@ jobs:
           echo "url=$URL" >> $GITHUB_OUTPUT
           echo "Deployed: $URL"
 
-
-      - name: Push FIRECRAWL_API_KEY as Worker secret (idempotent)
-        if: ${{ secrets.FIRECRAWL_API_KEY != '' }}
+      - name: Push FIRECRAWL_API_KEY as Worker secret
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
         run: |
-          echo "$FIRECRAWL_API_KEY" | npx wrangler secret put FIRECRAWL_API_KEY
+          if [ -n "$FIRECRAWL_API_KEY" ]; then
+            echo "$FIRECRAWL_API_KEY" | npx wrangler secret put FIRECRAWL_API_KEY
+          else
+            echo "::warning::FIRECRAWL_API_KEY secret missing, skipping"
+          fi
+
       - name: Smoke test /health
         run: |
           URL="${{ steps.url.outputs.url }}"
