@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Library — web2kb</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 min-h-screen pb-24">
-  <nav class="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center gap-3 z-10">
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen pb-24">
+  <nav class="sticky top-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center gap-3 z-10">
     <a href="library.html" class="font-semibold text-lg dark:text-white">📚 web2kb</a>
     <div class="flex-1"></div>
     <a href="add.html" class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md">+ Tambah</a>
@@ -41,7 +41,7 @@
         list.innerHTML = items.map(a => `
           <li>
             <a href="article.html?id=${encodeURIComponent(a.id)}"
-               class="block bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700 active:scale-[0.98] transition-transform">
+               class="block bg-white dark:bg-slate-900 rounded-lg p-4 shadow-sm border border-slate-200 dark:border-slate-700 active:scale-[0.98] transition-transform">
               <h3 class="font-semibold text-slate-900 dark:text-white mb-1 line-clamp-2">${escapeHtml(a.title || a.id)}</h3>
               <p class="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 mb-2">${escapeHtml(a.summary || "(tanpa ringkasan)")}</p>
               <div class="text-xs text-slate-400 dark:text-slate-500 truncate">${escapeHtml(a.source_url || "")}</div>

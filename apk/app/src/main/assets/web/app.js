@@ -102,7 +102,7 @@ function toast(msg, kind = "info") {
 
 function nav(html) {
   return `
-    <nav class="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center gap-3 z-10">
+    <nav class="sticky top-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center gap-3 z-10">
       <a href="library.html" class="font-semibold text-lg">📚 web2kb</a>
       <div class="flex-1"></div>
       <a href="add.html" class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md">+ Tambah</a>
