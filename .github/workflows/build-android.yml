@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: web2kb-apk
-          path: ${{ steps.locate.outputs.path }}
+          path: apk/${{ steps.locate.outputs.path }}
 
       - name: Publish to release (tag only)
         if: startsWith(github.ref, 'refs/tags/android-v')
